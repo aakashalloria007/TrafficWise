@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Map - TrafficWise</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <style>
+        /* Map Styling */
+        .map-container {
+            position: fixed;
+            margin-right: 100px;
+            margin-bottom: 100px;
+            top: 100px;
+            left: 200px;
+            right: 0;
+            bottom: 0;
+            background-color: #606060;
+        }
+
+        .leaflet-top.leaflet-left {
+            margin-top: 80px;
+        }
+
+        .leaflet-top.leaflet-right {
+            margin-top: 80px;
+            margin-right: 0px;
+        }
+
+        .leaflet-control-geocoder-form input {
+            background-color: white;
+        !important;
+            border: none;
+            border-radius: 0px;
+        }
+
+        .leaflet-control-geocoder-form input:focus {
+            border-color: white; /* Red border on focus */
+        !important;
+            box-shadow: 0 0 0 0; /* Subtle glow effect */
+        !important;
+        }
+
+
+        .leaflet-control-attribution {
+            visibility: hidden;
+        }
+
+        .leaflet-right {
+            height: 80% !important;
+        }
+
+        .leaflet-container {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 12px;
+            background-color: #F4F4F4 !important;
+            color: #DE3A3A;
+            height: 100%;
+            width: 100%;
+        }
+
+        .leaflet-routing-container {
+            border: 1px solid #DE3A3A;
+        }
+
+        .leaflet-right {
+            right: 100px;
+        }
+
+        .leaflet-bar {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 12px;
+            background-color: #F4F4F4 !important;
+            color: #DE3A3A;
+            border-color: #DE3A3A !important;
+        }
+
+        .leaflet-bar a {
+            border-bottom: 1px solid #DE3A3A !important;
+        }
+
+        .leaflet-bar a:hover {
+            background-color: #DE3A3A !important;
+            color: white !important;
+        }
+
+        ::-webkit-scrollbar {
+            border-radius: 6px;
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background-color: #DE3A3A; /* Green color for the scrollbar thumb */
+            border-radius: 6px; /* Rounded corners for the thumb */
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: #bc2626; /* Green color for the scrollbar thumb */
+
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #fff; /* Background color for the scrollbar track */
+            border-radius: 6px; /* Rounded corners for the track */
+        }
+
+    </style>
+</head>
+<body>
+<div class="screen">
+    <!-- Banner -->
+    <div class="banner">
+        <div class="logo-container">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="TrafficWise Logo" class="logo">
+        </div>
+        <div class="text-container">
+            <h1>TrafficWise</h1>
+            <p class="slogan">Navigate Smarter</p>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <ul>
+            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+            <li><a style="color:#DE3A3A;cursor: default">Live Map</a></li>
+            <li><a href="{{ url_for('route') }}">Navigation</a></li>
+            <li><a href="{{ url_for('chatbot') }}">Chatbot</a></li>
+            <li><a href="#" onclick="logout()">Logout</a></li>
+        </ul>
+    </div>
+</div>
+<!-- Map Container -->
+<div class="map-container" id="map"></div>
+
+<!-- Leaflet Scripts -->
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='js/L.Control.Locate.min.css') }}"/>
+<script src="{{ url_for('static', filename='js/L.Control.Locate.min.js') }}" charset="utf-8"></script>
+
+<script>
+    // Initialize Map
+    const map = L.map ('map').setView ([12.9716, 77.5946], 13); // Default to Bangalore coordinates
+
+    // Add OpenStreetMap tiles
+    L.tileLayer ('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo (map);
+
+
+    // Add Geolocation Control
+    L.control.locate ({
+        position: 'topleft',
+        drawCircle: true,
+        follow: true,
+        circleStyle: {color: '#DE3A3A'},
+        markerStyle: {color: '#DE3A3A'}
+    }).addTo (map);
+
+    // Add Search Control
+    L.Control.geocoder ({
+        defaultMarkGeocode: false,
+        position: 'topright',
+        collapsed: false,
+        placeholder: 'Search location...',
+        errorMessage: 'Location not found.'
+    })
+        .on ('markgeocode', function (e) {
+            map.fitBounds (e.geocode.bbox);
+        })
+        .addTo (map);
+
+    function logout () {
+        document.cookie = "session_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        window.location.href = '/';
+    }
+
+
+</script>
+</body>
+</html>

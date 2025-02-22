@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Route Details</title>
+    <link rel="stylesheet" href="../static/css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Route Traffic Prediction</h1>
+    </header>
+
+    <div class="route-details-container">
+        <h2 id="route-title">Loading Route Data...</h2>
+        <p id="route-prediction">Loading prediction...</p>
+
+        <div class="route-map">
+            <h3>Route Map</h3>
+            <img src="assets/images/map-image.jpg" alt="Route Map">
+        </div>
+
+        <div class="prediction-graph">
+            <h3>Traffic Prediction Over Time</h3>
+            <canvas id="trafficPredictionGraph" width="400" height="200"></canvas>
+        </div>
+    </div>
+
+    <script src="../js/scripts.js"></script>
+</body>
+</html>

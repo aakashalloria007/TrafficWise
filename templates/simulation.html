@@ -1,0 +1,82 @@
+<!-- templates/index.html (Frontend) -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SUMO-OSRM Integration</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"/>
+    <style>
+        #map {
+            height: 600px;
+        }
+
+        .controls {
+            padding: 10px;
+            background: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+<div class="controls">
+    <button onclick="startSimulation()">Start Simulation</button>
+    <button onclick="addVehicle()">Add Random Vehicle</button>
+</div>
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+    let map;
+    let startMarker;
+    let endMarker;
+
+    // Initialize map
+    function initMap () {
+        map = L.map ('map').setView ([51.505, - 0.09], 13);
+        L.tileLayer ('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo (map);
+
+        map.on ('click', function (e) {
+            if (!startMarker) {
+                startMarker = L.marker (e.latlng).addTo (map);
+            } else if (!endMarker) {
+                endMarker = L.marker (e.latlng).addTo (map);
+            }
+        });
+    }
+
+
+    // Start simulation with selected points
+    async function startSimulation () {
+        if (!startMarker || !endMarker) {
+            alert ('Please select start and end points on the map');
+            return;
+        }
+        const csrfToken = await axios.get ('/get_csrf_token');
+        const response = await axios.post ('/start_simulation', {
+                location: 'London, UK',
+                start: [startMarker.getLatLng ().lat, startMarker.getLatLng ().lng],
+                end: [endMarker.getLatLng ().lat, endMarker.getLatLng ().lng]
+            }, {
+                headers: {'X-CSRFToken': csrfToken.data.csrf_token}
+            }
+        );
+        console.log (response.data);
+    }
+
+    // Add random vehicle
+    async function addVehicle () {
+        const vehicleId = `veh_${Math.floor (Math.random () * 1000)}`;
+        const response = await axios.post ('/add_vehicle', {
+            id: vehicleId,
+            route: "random"  // Replace with actual route edges
+        }, {
+            headers: {'X-CSRFToken': csrfToken.data.csrf_token}
+        });
+        console.log (response.data);
+    }
+
+
+    // Initialize map on load
+    initMap ();
+</script>
+</body>
+</html>

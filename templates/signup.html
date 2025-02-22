@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signup - TrafficWise</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+<!-- Banner -->
+<div class="banner">
+    <div class="logo-container">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="TrafficWise Logo" class="logo">
+    </div>
+    <div class="text-container">
+        <h1>TrafficWise</h1>
+        <p class="slogan">Navigate Smarter</p>
+    </div>
+</div>
+
+<!-- Signup Container -->
+<div class="signup-container">
+    <h2>Create an Account</h2>
+    <form method="POST" action="/registration" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+
+        {{ form.username(class="css_class") }}
+        {% if form.username.errors %}
+            <ul class="errors">
+                {% for error in form.username.errors %}
+                    <li style="color: red">{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        {{ form.email() }}
+        {% if form.email.errors %}
+            <ul class="errors">
+                {% for error in form.email.errors %}
+                    <li style="color: red">{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <div class="pass">
+            {{ form.password() }}
+            {#                <img class = "pass-icon" id = "pass-icon" onclick="pass()" src="/staticFiles/eye-close.png" >#}
+        </div>
+        {% if form.password.errors %}
+            <ul class="errors">
+                {% for error in form.password.errors %}
+                    <li style="color: red">{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        <div class="confirm_pass">
+            {{ form.confirm_password() }}
+            {#                <img class = "pass-icon" id = "pass-icon" onclick="pass()" src="/staticFiles/eye-close.png" >#}
+        </div>
+        {% if form.confirm_password.errors %}
+            <ul class="errors">
+                {% for error in form.confirm_password.errors %}
+                    <li style="color: red">{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        {{ form.profile_pic }}
+
+        {% if form.profile_pic.errors %}
+            <ul class="errors">
+                {% for error in form.profile_pic.errors %}
+                    <li style="color: red">{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        <button type="submit">Register</button>
+
+        <a href="{{ url_for('login') }}">
+            <button type="button">Already Have an Account?</button>
+        </a>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <p style="color:red">{{ message }}</p>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+
+    </form>
+</div>
+
+</body>
+</html>

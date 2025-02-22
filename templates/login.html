@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+<!-- Banner Section -->
+<header class="banner">
+    <div class="logo-container">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="TrafficWise Logo" class="logo">
+    </div>
+    <div class="text-container">
+        <h1>TrafficWise</h1>
+        <p class="slogan">Navigate Smarter</p>
+    </div>
+</header>
+
+<!-- Login Form Section -->
+<div class="login-container">
+    <h2>Login</h2>
+    <form method="POST" action="/login" enctype="multipart/form-data" id="loginForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <input name="email" type="text" id="username" placeholder="Username or Email" required>
+        <input name="password" type="password" id="password" placeholder="Password" required>
+        <div class="remember-me-container">
+            <label class="switch">
+                <input type="checkbox" id="rememberMe"/>
+                <span class="slider"></span>
+            </label>
+            <span class="remember-me-text">Remember me</span>
+        </div>
+        <button type="submit">Login</button>
+        <div id="error-message" class="error-message" style="display: none;">Invalid username or password.</div>
+    </form>
+
+    <a href="{{ url_for('registration') }}">
+        <button type="button">Need an Account?</button>
+    </a>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <p style="color:red">{{ message }}</p>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+</div>
+
+<script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+</body>
+</html>

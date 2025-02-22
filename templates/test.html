@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chatbot with Marked.js</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+        }
+
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        code {
+            background: #eee;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+<div id="output"></div>
+
+<script>
+    const markdownContent = `
+**Roadmap to Learn C# for Video Game Development**
+
+1. **Set Up Your Development Environment:**
+   - **Visual Studio:** Download Visual Studio 2022 (Community Edition) from the official website.
+   - **Unity Editor:** Install the latest stable version of Unity from their website.
+
+2. **Install Required Tools:**
+   - Install the .NET Runtime and the Unity C# Profile in Visual Studio to leverage Unity-specific templates and features.
+
+3. **Learn C# Basics:**
+   - **Start with Syntax:** Write a "Hello World" program to get familiar with basic syntax.
+   - **Functions:** Create functions for simple tasks, such as adding numbers.
+   - **Variables:** Practice using integers, strings, and booleans.
+   - **Classes and Objects:** Define a class (e.g., a game character) and create instances to understand OOP concepts. Use the Object Browser to
+explore available types.
+
+4. **Unity Basics:**
+   - **Familiarize with the Editor:** Explore panels like Hierarchy, Inspector, Project, and Console.
+   - **Scene Setup:** Create scenes, game objects, and components. Use the Inspector to modify properties and manage assets.
+
+5. **Scripting in Unity:**
+   - **2D Game Basics:** Follow tutorials to create a simple 2D game (e.g., Pong) with buttons for controls and score display.
+   - **UI System:** Learn Unity’s built-in UI components to design menus and interfaces.
+
+6. **Animation Basics:**
+   - Use Animator and create simple animations by defining keyframes and transitions between states.
+
+7. **Collision Detection:**
+   - Implement collision detection using Physics components in Unity. Trigger events on collision.
+
+8. **Player Input Handling:**
+   - Set up scripts to handle keyboard input for movement and other player actions.
+
+9. **Complex Game Development:**
+   - Transition to creating platformers or maze games, focusing on character movement, AI, and combat mechanics.
+
+10. **Optimization Techniques:**
+    - Learn optimization strategies to improve performance as needed.
+
+11. **Publishing and Deployment:**
+    - Explore Unity Ads for monetization and learn how to build games for various platforms (PC, web, mobile).
+
+12. **Build a Game from Scratch:**
+    - Follow structured tutorials, starting with simple projects like maze or infinite runner games.
+
+13. **Practice and Experimentation:**
+    - Regular practice is key. Experiment with different ideas and concepts to reinforce learning.
+
+14. **Community Engagement:**
+    - Join forums, Discord groups, and follow game developers for support and insights.
+
+15. **Advanced Learning:**
+    - Enroll in online courses for a more guided approach and stay updated with industry practices via YouTube and Twitter.
+
+16. **Publish Your Game:**
+    - Once confident, publish your game on the Unity Asset Store for potential monetization.
+
+**Conclusion:** Start by setting up your environment, grasp C# basics, then dive into Unity scripting through incremental projects. Regular practice,
+community engagement, and structured learning will accelerate your journey in game development.
+`;
+
+    // Parse Markdown to HTML
+    const htmlContent = marked.parse (markdownContent);
+
+    // Set the output
+    document.getElementById ('output').innerHTML = htmlContent;
+</script>
+</body>
+</html>

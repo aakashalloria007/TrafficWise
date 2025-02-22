@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - TrafficWise</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+</head>
+<body>
+<!-- Banner -->
+<div class="banner">
+    <div class="logo-container">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="TrafficWise Logo" class="logo">
+    </div>
+    <div class="text-container">
+        <h1>TrafficWise</h1>
+        <p class="slogan">Navigate Smarter</p>
+    </div>
+</div>
+<div class="screen">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <ul>
+            <li><a style="color:#DE3A3A;cursor: default">Dashboard</a></li>
+            <li><a href="{{ url_for('maps') }}">Live Map</a></li>
+            <li><a href="{{ url_for('route') }}">Navigation</a></li>
+            <li><a href="{{ url_for('chatbot') }}">Chatbot</a></li>
+            <li><a href="#" onclick="logout()">Logout</a></li>
+        </ul>
+    </div>
+
+    <!-- Dashboard Main Content -->
+    <div class="dashboard-container">
+        <h2>Welcome Aakash</h2>
+        <div class="card-container">
+            <div class="card">
+                <h3>Saved</h3>
+                <p>₹10,500</p>
+            </div>
+            <div class="card">
+                <h3>Travelled</h3>
+                <p>500kms</p>
+            </div>
+            <div class="card">
+                <h3>Time Saved</h3>
+                <p>2hrs</p>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+<script>
+    function logout () {
+        document.cookie = "session_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        location.reload ()
+    }
+</script>
+</html>
