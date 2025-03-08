@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trips - TrafficWise</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <style>
+    </style>
+</head>
+<body>
+<!-- Banner -->
+<div class="banner">
+    <div class="logo-container">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="TrafficWise Logo" class="logo">
+    </div>
+    <div class="text-container">
+        <h1>TrafficWise</h1>
+        <p class="slogan">Journey Manager</p>
+    </div>
+</div>
+<div class="screen">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <ul>
+            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+            <li><a href="{{ url_for('maps') }}">Live Map</a></li>
+            <li><a href="{{ url_for('route') }}">Navigation</a></li>
+            <li><a style="color:#DE3A3A;cursor: default">Trips</a></li>
+            <li><a href="{{ url_for('chatbot') }}">Chatbot</a></li>
+            <li><a href="#" onclick="logout()">Logout</a></li>
+        </ul>
+    </div>
+
+    <!-- History Main Content -->
+    <div class="dashboard-container">
+        <h2 class="welcome">Trip History</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Trip ID</th>
+                        <th>Date/Time</th>
+                        <th>Start Location</th>
+                        <th>End Location</th>
+                        <th>Distance (km)</th>
+                        <th>Time Taken</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for trip in trips %}
+                    <tr>
+                        <td>#{{ '%03d' % loop.index }}</td>
+                        <td>{{ trip[4].strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>{{ trip[0].split(',')[0] }}</td>
+                        <td>{{ trip[1].split(',')[0] }}</td>
+                        <td>{{ trip[2]/1000 }}</td>
+                        <td>{{ '%d hr %d min' % (trip[3] // 3600, (trip[3] % 3600) // 60) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+<script>
+    function logout() {
+        document.cookie = "session_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        location.reload();
+    }
+</script>
+</html>

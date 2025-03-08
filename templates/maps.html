@@ -107,6 +107,16 @@
             border-radius: 6px; /* Rounded corners for the track */
         }
 
+
+        :root {
+    --map-tiles-filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
+}
+
+@media (prefers-color-scheme: dark) {
+    .map-tiles {
+        filter:var(--map-tiles-filter, none);
+	}
+}
     </style>
 </head>
 <body>
@@ -118,7 +128,7 @@
         </div>
         <div class="text-container">
             <h1>TrafficWise</h1>
-            <p class="slogan">Navigate Smarter</p>
+            <p class="slogan">Real-Time</p>
         </div>
     </div>
 
@@ -128,6 +138,7 @@
             <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
             <li><a style="color:#DE3A3A;cursor: default">Live Map</a></li>
             <li><a href="{{ url_for('route') }}">Navigation</a></li>
+            <li><a href="{{ url_for('trips') }}">Trips</a></li>
             <li><a href="{{ url_for('chatbot') }}">Chatbot</a></li>
             <li><a href="#" onclick="logout()">Logout</a></li>
         </ul>
@@ -148,9 +159,10 @@
     const map = L.map ('map').setView ([12.9716, 77.5946], 13); // Default to Bangalore coordinates
 
     // Add OpenStreetMap tiles
-    L.tileLayer ('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-    }).addTo (map);
+    L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        className: 'map-tiles'
+    }).addTo(map);
 
 
     // Add Geolocation Control

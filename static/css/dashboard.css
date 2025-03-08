@@ -9,6 +9,9 @@ body {
     overflow: hidden; /* Prevent scrolling */
 }
 
+.a{
+    user-select: none;
+}
 
 /* Banner Styles */
 .banner {
@@ -112,6 +115,7 @@ body {
     font-size: 1.2em;
     letter-spacing: 1px;
     display: block;
+    user-select: none;
 }
 
 .sidebar ul li a:hover {
@@ -167,7 +171,7 @@ body {
 }
 
 .card p {
-    font-size: 2em;
+    font-size: 1.75em;
     font-weight: bold;
     margin: 0;
 }
@@ -258,6 +262,14 @@ body {
     background-color: #FF5C5C; /* Slightly lighter red on hover */
 }
 
+.card{
+    user-select: none; /* Standard syntax */
+}
+.welcome{
+    user-select: none;
+}
+
+
 /* Route Navigation Styling */
 .route-navigation {
     background-color: #171717; /* Match card background */
@@ -275,6 +287,7 @@ body {
 
 /* Header in Route Navigation */
 .route-navigation h2 {
+    margin-right: 40px;
     color: #DE3A3A; /* Red heading for emphasis */
     font-size: 1.5em;
     margin-bottom: 10px;
@@ -493,4 +506,63 @@ input[type="text"]:focus:not(.input_message) , input[type=password]:focus:not(.i
 
 .toggle-thinking-button:hover {
     background-color: #c32a2a;
+}
+
+/* Table Styles */
+.table-container {
+    overflow-y: auto;
+    margin-top: 20px;
+    max-height: 450px;
+    position: relative;
+    border-radius: 8px;
+    border: 1px dot-dash #DE3A3A;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #171717;
+    user-select: none;
+}
+
+th, td {
+    padding: 15px;
+    text-align: left;
+    font-family: 'Montserrat', sans-serif;
+    color: white;
+}
+
+th {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background-color: #DE3A3A;
+    font-weight: bold;
+    letter-spacing: 1px;
+    user-select: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Ensures header covers row lines */
+}
+
+tbody tr {
+    height: 50px;
+}
+
+tr:nth-child(even) {
+    background-color: #1f1f1f;
+}
+
+td {
+    user-select: none;
+}
+
+tr:hover {
+    background-color: #232323;
+    cursor: pointer;
+}
+
+/* Responsive Table */
+@media screen and (max-width: 768px) {
+    table {
+        min-width: 600px;
+    }
 }

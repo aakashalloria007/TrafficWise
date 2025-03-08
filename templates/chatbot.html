@@ -14,7 +14,7 @@
         <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" class="logo">
     </div>
     <div class="text-container">
-        <h1>Chatbot</h1>
+        <h1>TrafficWise</h1>
         <p class="slogan">AI Assistant</p>
     </div>
 </header>
@@ -25,6 +25,7 @@
             <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
             <li><a href="{{ url_for('maps') }}">Live Map</a></li>
             <li><a href="{{ url_for('route') }}">Navigation</a></li>
+            <li><a href="{{ url_for('trips') }}">Trips</a></li>
             <li><a style="color:#DE3A3A;cursor:default">Chatbot</a></li>
             <li><a href="#" onclick="logout()">Logout</a></li>
         </ul>
@@ -58,219 +59,220 @@
     sendButton.addEventListener ('click', sendMessage);
     userInput.addEventListener ('keypress', (e) => {
         if (e.key === 'Enter') sendMessage ();
-    });
+    })
+
+        function cleanEmptyBreaks (content) {
+            content = content.replace (/^(<br>\s*)+/, '\n');
+            // Replace **text** with <b>text</b>
+            return content.replace (/\*\*(.*?)\*\*/g, '<b>$1</b>');
+        }
 
 
-    function cleanEmptyBreaks (content) {
-        content = content.replace (/^(<br>\s*)+/, '\n');
-        // Replace **text** with <b>text</b>
-        return content.replace (/\*\*(.*?)\*\*/g, '<b>$1</b>');
-    }
+        async function sendMessage () {
 
 
-    async function sendMessage () {
+            const text = userInput.value.trim ();
+            if (!text) return;
 
+            addMessage (text, 'user');
+            userInput.value = '';
 
-        const text = userInput.value.trim ();
-        if (!text) return;
+            currentBotMessage = addMessage ('', 'bot');
+            currentBotMessage.classList.add ('thinking-message');
 
-        addMessage (text, 'user');
-        userInput.value = '';
+            try {
+                const response = await fetch ('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify ({
+                        user_input: text,
+                        messages: messages
+                    })
+                });
 
-        currentBotMessage = addMessage ('', 'bot');
-        currentBotMessage.classList.add ('thinking-message');
+                const reader = response.body.getReader ();
+                const decoder = new TextDecoder ();
+                let buffer = '';
+                let thinkingContent = '';
+                let finalResponse = '';
+                let isThinkingComplete = false;
 
-        try {
-            const response = await fetch ('/chat', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify ({
-                    user_input: text,
-                    messages: messages
-                })
-            });
+                while (true) {
+                    const {done, value} = await reader.read ();
+                    if (done) break;
 
-            const reader = response.body.getReader ();
-            const decoder = new TextDecoder ();
-            let buffer = '';
-            let thinkingContent = '';
-            let finalResponse = '';
-            let isThinkingComplete = false;
+                    buffer += decoder.decode (value, {stream: true});
 
-            while (true) {
-                const {done, value} = await reader.read ();
-                if (done) break;
+                    const events = buffer.split ('\n\n');
+                    buffer = events.pop () || '';
 
-                buffer += decoder.decode (value, {stream: true});
+                    for (const event of events) {
+                        const dataStr = event.replace ('data: ', '').trim ();
+                        if (!dataStr) continue;
 
-                const events = buffer.split ('\n\n');
-                buffer = events.pop () || '';
+                        const data = JSON.parse (dataStr);
+                        if (!data.content) continue;
 
-                for (const event of events) {
-                    const dataStr = event.replace ('data: ', '').trim ();
-                    if (!dataStr) continue;
+                        let contentChunk = data.content;
 
-                    const data = JSON.parse (dataStr);
-                    if (!data.content) continue;
+                        // Handle <think> blocks
+                        const thinkEndIndex = contentChunk.indexOf ('</think>');
+                        if (thinkEndIndex !== - 1) {
+                            currentBotMessage.classList.add ('flipping_start');
 
-                    let contentChunk = data.content;
+                            setTimeout (() => {
+                                thinkingContent += contentChunk.substring (0, thinkEndIndex + 8); // Keep the <think> tag
+                                finalResponse += contentChunk.substring (thinkEndIndex + 8);
+                                isThinkingComplete = true;
+                                MathJax.typesetPromise ();
 
-                    // Handle <think> blocks
-                    const thinkEndIndex = contentChunk.indexOf ('</think>');
-                    if (thinkEndIndex !== - 1) {
-                        currentBotMessage.classList.add ('flipping_start');
+                                currentBotMessage.textContent = cleanEmptyBreaks (finalResponse);
+                                currentBotMessage.classList.remove ('thinking-message');
+                            }, 0.3)
+                            currentBotMessage.classList.remove ('flipping_start');
+                            currentBotMessage.classList.add ('flipping_last');
 
-                        setTimeout (() => {
-                            thinkingContent += contentChunk.substring (0, thinkEndIndex + 8); // Keep the <think> tag
-                            finalResponse += contentChunk.substring (thinkEndIndex + 8);
-                            isThinkingComplete = true;
-                            MathJax.typesetPromise ();
+                            // Split thinking part and final response
 
-                            currentBotMessage.textContent = cleanEmptyBreaks (finalResponse);
-                            currentBotMessage.classList.remove ('thinking-message');
-                        }, 0.3)
-                        currentBotMessage.classList.remove ('flipping_start');
-                        currentBotMessage.classList.add ('flipping_last');
+                        } else if (!isThinkingComplete) {
+                            // Accumulate thinking content
+                            thinkingContent += contentChunk;
+                            currentBotMessage.textContent = cleanEmptyBreaks (
+                                thinkingContent.replace (/<\/?think>/g, '') // Hide <think> in the UI
+                            );
+                        } else {
+                            // Append to final response
+                            finalResponse += contentChunk;
+                            currentBotMessage.textContent = cleanEmptyBreaks (marked.parse (finalResponse));
+                            chatContainer.scrollTop = chatContainer.scrollHeight;
+                        }
 
-                        // Split thinking part and final response
-
-                    } else if (!isThinkingComplete) {
-                        // Accumulate thinking content
-                        thinkingContent += contentChunk;
-                        currentBotMessage.textContent = cleanEmptyBreaks (
-                            thinkingContent.replace (/<\/?think>/g, '') // Hide <think> in the UI
-                        );
-                    } else {
-                        // Append to final response
-                        finalResponse += contentChunk;
-                        currentBotMessage.textContent = cleanEmptyBreaks (marked.parse (finalResponse));
                         chatContainer.scrollTop = chatContainer.scrollHeight;
                     }
-
-                    chatContainer.scrollTop = chatContainer.scrollHeight;
                 }
+
+                // Finalize messages array
+                messages.push ({role: 'user', content: text});
+                messages.push ({
+                    role: 'assistant',
+                    content: `<think>${thinkingContent}</think>${finalResponse}`, // Keep full content
+                    thinking: thinkingContent, // Store thinking process separately
+                    final: finalResponse // Store final response separately
+                });
+
+
+                // Add a toggle button for switching between final and thinking
+                addToggleThinkingButton (currentBotMessage, cleanEmptyBreaks (thinkingContent), cleanEmptyBreaks (marked.parse (finalResponse)));
+                MathJax.typesetPromise ();
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            } catch (error) {
+                console.error ('Error:', error);
+                currentBotMessage.textContent = "Sorry, there was an error processing your request.";
+                chatContainer.scrollTop = chatContainer.scrollHeight;
             }
-
-            // Finalize messages array
-            messages.push ({role: 'user', content: text});
-            messages.push ({
-                role: 'assistant',
-                content: `<think>${thinkingContent}</think>${finalResponse}`, // Keep full content
-                thinking: thinkingContent, // Store thinking process separately
-                final: finalResponse // Store final response separately
-            });
-
-
-            // Add a toggle button for switching between final and thinking
-            addToggleThinkingButton (currentBotMessage, cleanEmptyBreaks (thinkingContent), cleanEmptyBreaks (marked.parse (finalResponse)));
-            MathJax.typesetPromise ();
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-
-        } catch (error) {
-            console.error ('Error:', error);
-            currentBotMessage.textContent = "Sorry, there was an error processing your request.";
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-    }
-
-    function addToggleThinkingButton (messageElement, thinkingContent, finalContent) {
-        // Ensure the message element has the "bot-message" class
-        messageElement.classList.add ('bot-message');
-
-        // Check if the initial content is the final output or thinking message
-        const isThinkingInitially = finalContent.trim () === '';
-
-        if (!isThinkingInitially) {
-            // If finalContent is ready, ensure "thinking-message" is removed
-            messageElement.classList.add ('flipping_start');
-            setTimeout (() => {
-                messageElement.classList.remove ('thinking-message');
-                messageElement.innerHTML = finalContent;
-                MathJax.typesetPromise ();
-            }, 0.3)
-            messageElement.classList.remove ('flipping_start');
-            messageElement.classList.add ('flipping_last');
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-
-
-        } else {
-            messageElement.classList.add ('flipping_start');
-            setTimeout (() => {
-                messageElement.classList.add ('thinking-message');
-                messageElement.innerHTML = thinkingContent.replace (/<\/?think>/g, '');
-                MathJax.typesetPromise ();
-            }, 0.3)
-            // If in thinking state, add "thinking-message"
-            messageElement.classList.remove ('flipping_start');
-            messageElement.classList.add ('flipping_last');
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-
         }
 
-        // Create the toggle button
-        const toggleButton = document.createElement ('button');
-        toggleButton.textContent = isThinkingInitially ? 'View Final Output' : 'View Thinking';
-        toggleButton.className = 'toggle-thinking-button';
+        function addToggleThinkingButton (messageElement, thinkingContent, finalContent) {
+            // Ensure the message element has the "bot-message" class
+            messageElement.classList.add ('bot-message');
 
-        // Initial state variables
-        let showingThinking = isThinkingInitially;
+            // Check if the initial content is the final output or thinking message
+            const isThinkingInitially = finalContent.trim () === '';
 
-        // Attach toggle functionality
-        toggleButton.addEventListener ('click', () => {
-            showingThinking = !showingThinking;
-
-            if (showingThinking) {
-                // Switch to thinking message
+            if (!isThinkingInitially) {
+                // If finalContent is ready, ensure "thinking-message" is removed
                 messageElement.classList.add ('flipping_start');
-
                 setTimeout (() => {
-                    messageElement.innerHTML = thinkingContent.replace (/<\/?think>/g, '');
-                    messageElement.classList.add ('thinking-message');
-                    toggleButton.textContent = 'View Final Output';
+                    messageElement.classList.remove ('thinking-message');
+                    messageElement.innerHTML = finalContent;
                     MathJax.typesetPromise ();
                 }, 0.3)
                 messageElement.classList.remove ('flipping_start');
                 messageElement.classList.add ('flipping_last');
                 chatContainer.scrollTop = chatContainer.scrollHeight;
+
 
             } else {
-                // Switch back to final output
                 messageElement.classList.add ('flipping_start');
                 setTimeout (() => {
-                    messageElement.innerHTML = finalContent;
-                    messageElement.classList.remove ('thinking-message');
-                    toggleButton.textContent = 'View Thinking';
+                    messageElement.classList.add ('thinking-message');
+                    messageElement.innerHTML = thinkingContent.replace (/<\/?think>/g, '');
                     MathJax.typesetPromise ();
                 }, 0.3)
-
+                // If in thinking state, add "thinking-message"
                 messageElement.classList.remove ('flipping_start');
                 messageElement.classList.add ('flipping_last');
                 chatContainer.scrollTop = chatContainer.scrollHeight;
 
+            }
+
+            // Create the toggle button
+            const toggleButton = document.createElement ('button');
+            toggleButton.textContent = isThinkingInitially ? 'View Final Output' : 'View Thinking';
+            toggleButton.className = 'toggle-thinking-button';
+
+            // Initial state variables
+            let showingThinking = isThinkingInitially;
+
+            // Attach toggle functionality
+            toggleButton.addEventListener ('click', () => {
+                showingThinking = !showingThinking;
+
+                if (showingThinking) {
+                    // Switch to thinking message
+                    messageElement.classList.add ('flipping_start');
+
+                    setTimeout (() => {
+                        messageElement.innerHTML = thinkingContent.replace (/<\/?think>/g, '');
+                        messageElement.classList.add ('thinking-message');
+                        toggleButton.textContent = 'View Final Output';
+                        MathJax.typesetPromise ();
+                    }, 0.3)
+                    messageElement.classList.remove ('flipping_start');
+                    messageElement.classList.add ('flipping_last');
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+
+                } else {
+                    // Switch back to final output
+                    messageElement.classList.add ('flipping_start');
+                    setTimeout (() => {
+                        messageElement.innerHTML = finalContent;
+                        messageElement.classList.remove ('thinking-message');
+                        toggleButton.textContent = 'View Thinking';
+                        MathJax.typesetPromise ();
+                    }, 0.3)
+
+                    messageElement.classList.remove ('flipping_start');
+                    messageElement.classList.add ('flipping_last');
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+
+                }
+            });
+
+            // Append the toggle button after the message
+            messageElement.insertAdjacentElement ('afterend', toggleButton);
+        }
+
+
+        function addMessage (text, sender) {
+            const msgDiv = document.createElement ('div');
+            msgDiv.className = `message ${sender}-message`;
+            msgDiv.textContent = text;
+            chatContainer.appendChild (msgDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            return msgDiv;
+        }
+
+        document.addEventListener ('animationend', (e) => {
+            if (e.target.classList.contains ('flipping_last')) {
+                e.target.classList.remove ('flipping_last');
             }
         });
 
-        // Append the toggle button after the message
-        messageElement.insertAdjacentElement ('afterend', toggleButton);
-    }
 
-
-    function addMessage (text, sender) {
-        const msgDiv = document.createElement ('div');
-        msgDiv.className = `message ${sender}-message`;
-        msgDiv.textContent = text;
-        chatContainer.appendChild (msgDiv);
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-        return msgDiv;
-    }
-
-    document.addEventListener ('animationend', (e) => {
-        if (e.target.classList.contains ('flipping_last')) {
-            e.target.classList.remove ('flipping_last');
-        }
-    });
 </script>
 
 </body>

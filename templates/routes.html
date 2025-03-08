@@ -13,6 +13,11 @@
     <style>
         h2 {
             max-width: 500px;
+            user-select: none;
+        }
+
+        h3 {
+            user-select: none;
         }
 
         /* Map Styling */
@@ -27,12 +32,12 @@
             background-color: #606060;
         }
 
-        .leaflet-left{
+        .leaflet-left {
             margin-top: 15px;
         }
 
-        td{
-            color: white !;
+        td {
+            color: white !important;
         }
 
         .leaflet-routing-add-waypoint {
@@ -51,7 +56,7 @@
             position: absolute !important;
             right: 0px !important;
             bottom: 0;
-            transform: translateY(calc(100% + 12px)) !important;
+        {#transform: translateY(calc(100% + 12px)) !important;#}
         }
 
         .leaflet-routing-add-waypoint:hover,
@@ -143,7 +148,7 @@
 
         .leaflet-routing-geocoder {
             position: relative;
-            margin-right: 40px;
+        {#margin-right: 40px;#}
         }
 
         .leaflet-routing-geocoder input {
@@ -153,13 +158,13 @@
             color: white !important;
             padding: 12px 45px 12px 15px !important;
             border-radius: 4px !important;
-            max-width: 390px !important;
+            max-width: 400px !important;
             width: 100% !important;
         }
 
         .leaflet-routing-remove-waypoint {
             position: absolute !important;
-            right: -40px !important;
+            right: 0px !important;
             top: 50% !important;
             transform: translateY(-50%) !important;
             width: 32px !important;
@@ -243,7 +248,7 @@
     </div>
     <div class="text-container">
         <h1>TrafficWise</h1>
-        <p class="slogan">Navigate Smarter</p>
+        <p class="slogan">Route Planner</p>
     </div>
 </div>
 <div class="screen">
@@ -253,6 +258,7 @@
             <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
             <li><a href="{{ url_for('maps') }}">Live Map</a></li>
             <li><a style="color:#DE3A3A;cursor: default">Navigation</a></li>
+            <li><a href="{{ url_for('trips') }}">Trips</a></li>
             <li><a href="{{ url_for('chatbot') }}">Chatbot</a></li>
             <li><a href="#" onclick="logout()">Logout</a></li>
         </ul>
@@ -264,6 +270,7 @@
 </div>
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 <script src="https://unpkg.com/leaflet-control-geocoder@2.4.0/dist/Control.Geocoder.js"></script>
 <script src="{{ url_for('static', filename='js/L.Control.Locate.min.js') }}" charset="utf-8"></script>
@@ -317,6 +324,186 @@
         document.cookie = "session_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         window.location.href = '/';
     }
+
+    // Add a save route button after the routing control is initialized
+    function addSaveRouteButton () {
+        // Wait for the routing control to be fully loaded
+        setTimeout (() => {
+            const geocoderContainer = document.querySelector ('.leaflet-routing-geocoders');
+
+            if (!geocoderContainer) return;
+
+            // Create button container with styling to match the existing UI
+            const buttonContainer = document.createElement ('div');
+            buttonContainer.style.width = "100%";
+            {#buttonContainer.style.marginTop = '20px';#}
+
+            // Create the save button
+            const saveButton = document.createElement ('button');
+            saveButton.textContent = 'Save Route';
+            saveButton.style.backgroundColor = '#DE3A3A';
+            saveButton.style.color = 'white';
+            saveButton.style.border = 'none';
+            saveButton.style.padding = '10px 15px';
+            saveButton.style.borderRadius = '4px';
+            saveButton.style.cursor = 'pointer';
+            saveButton.style.fontFamily = "'Montserrat', sans-serif";
+            saveButton.style.width = '100%';
+            saveButton.style.maxWidth = "461px";
+            saveButton.style.fontWeight = 'bold';
+
+            // Hover effect
+            saveButton.onmouseover = function () {
+                this.style.backgroundColor = '#c32a2a';
+            };
+            saveButton.onmouseout = function () {
+                this.style.backgroundColor = '#DE3A3A';
+            };
+
+            // Add click event to save route
+            saveButton.onclick = saveRouteDetails;
+
+            // Append button to container
+            buttonContainer.appendChild (saveButton);
+
+            // Add the button container after the geocoder inputs
+            geocoderContainer.appendChild (buttonContainer);
+        }, 0); // Give time for the routing control to initialize
+    }
+
+    // Function to save route details
+    async function saveRouteDetails () {
+        // Get routing information from the routing control
+        const route = control.getRouter ().route;
+        const plan = control.getPlan ();
+        let waypoints = [];
+
+        // Get route summary (if available)
+        let routeInfo = {
+            distance: 0,
+            time: 0,
+            waypoints: waypoints
+        };
+
+        // Check if there's an active route with summary
+        if (control._routes && control._routes.length > 0) {
+            const activeRoute = control._routes[0];
+            if (activeRoute.summary) {
+                routeInfo.distance = activeRoute.summary.totalDistance;
+                routeInfo.time = activeRoute.summary.totalTime;
+            }
+        }
+
+        // Get waypoint names (addresses)
+        const waypointElements = document.querySelectorAll ('.leaflet-routing-geocoder input');
+        let Waypoints = [];
+        waypointElements.forEach (element => {
+            routeInfo.waypoints.push (element.value)
+        });
+
+        try {
+            console.log ("Sending data:", {a: 1234});
+
+            const response = await fetch ('/save_route', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify (routeInfo)
+            });
+
+            console.log ("Response status:", response.status);
+
+            if (!response.ok) {
+                const errorText = await response.text ();
+                console.error ("Server error:", errorText);
+                throw new Error (`Server responded with ${response.status}: ${errorText}`);
+            } else {
+                alert ("Successfully Saved trip")
+            }
+
+            const data = await response.json ();
+            console.log ("Response data:", data);
+        } catch (error) {
+            console.error ("Fetch error:", error);
+        }
+
+    }
+
+    addSaveRouteButton ()
 </script>
+<script>
+    function generateSUMOPolyFromControlRoutes() {
+    // Check if control._routes exists and has at least one route
+    if (!control._routes || control._routes.length === 0) {
+        alert("No route available. Please generate a route first.");
+        return;
+    }
+
+    // Get the first route's coordinates (assumes structure from your route.txt)
+    var routeObj = control._routes[0];
+    var coords = routeObj.coordinates; // array of {lat, lng} objects
+
+    if (!coords || coords.length === 0) {
+        alert("Route coordinates not available.");
+        return;
+    }
+
+    // Convert coordinates to [lng, lat] format for Turf.js
+    var turfCoords = coords.map(function(point) {
+        return [point.lng, point.lat];
+    });
+
+    // Create a Turf.js LineString from the coordinates
+    var line = turf.lineString(turfCoords);
+
+    // Buffer the line by 50 meters (adjust the buffer distance as needed)
+    var buffered = turf.buffer(line, 50, { units: 'meters' });
+
+    // Extract the polygon coordinates (assumes buffered result is a Polygon)
+    var polygonCoords;
+    if (buffered.geometry.type === "Polygon") {
+        polygonCoords = buffered.geometry.coordinates[0]; // outer ring
+    } else if (buffered.geometry.type === "MultiPolygon") {
+        // Use the first polygon of the multipolygon
+        polygonCoords = buffered.geometry.coordinates[0][0];
+    } else {
+        alert("Unexpected geometry type: " + buffered.geometry.type);
+        return;
+    }
+
+    // Build the SUMO polygon XML string
+    var xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+    xml += '<polygon id="routeArea" color="1,0,0,1">\n';
+    polygonCoords.forEach(function(coord) {
+        // SUMO expects x as longitude and y as latitude
+        xml += '    <point x="' + coord[0] + '" y="' + coord[1] + '"/>\n';
+    });
+    xml += '</polygon>\n';
+
+    // Create a Blob from the XML and trigger a download
+    var blob = new Blob([xml], { type: 'text/xml' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'route.poly.xml';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    console.log("route.poly.xml generated and download triggered.");
+}
+
+// Create and add a button to trigger the generation
+var button = document.createElement('button');
+button.innerHTML = 'Generate SUMO Poly from Route';
+button.style.position = 'absolute';
+button.style.top = '10px';
+button.style.right = '10px';
+button.style.zIndex = '1000';
+button.onclick = generateSUMOPolyFromControlRoutes;
+document.body.appendChild(button);
+</script>
+
 </body>
 </html>

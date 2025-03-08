@@ -10,6 +10,8 @@
     <orderEntry type="library" name="marked" level="application" />
     <orderEntry type="library" name="leaflet-control-geocoder" level="application" />
     <orderEntry type="library" name="leaflet" level="application" />
+    <orderEntry type="library" name="@turf/turf" level="application" />
+    <orderEntry type="library" name="leaflet-routing-machine" level="application" />
   </component>
   <component name="PyNamespacePackagesService">
     <option name="namespacePackageFolders">

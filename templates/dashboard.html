@@ -24,6 +24,7 @@
             <li><a style="color:#DE3A3A;cursor: default">Dashboard</a></li>
             <li><a href="{{ url_for('maps') }}">Live Map</a></li>
             <li><a href="{{ url_for('route') }}">Navigation</a></li>
+            <li><a href="{{ url_for('trips') }}">Trips</a></li>
             <li><a href="{{ url_for('chatbot') }}">Chatbot</a></li>
             <li><a href="#" onclick="logout()">Logout</a></li>
         </ul>
@@ -31,19 +32,19 @@
 
     <!-- Dashboard Main Content -->
     <div class="dashboard-container">
-        <h2>Welcome Aakash</h2>
+        <h2 class="welcome">Welcome {{ mydict["username"] }}</h2>
         <div class="card-container">
             <div class="card">
-                <h3>Saved</h3>
-                <p>₹10,500</p>
+                <h3>Fuel Cost</h3>
+                <p>{{ mydict["fuel_cost_range"] }}</p>
             </div>
             <div class="card">
                 <h3>Travelled</h3>
-                <p>500kms</p>
+                <p>{{ mydict["distance_km"] }}km</p>
             </div>
             <div class="card">
-                <h3>Time Saved</h3>
-                <p>2hrs</p>
+                <h3>Time Spent</h3>
+                <p>{{ mydict["duration_sec"] }}</p>
             </div>
         </div>
     </div>

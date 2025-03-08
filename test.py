@@ -1,23 +1,33 @@
-{"Binds": [], "ContainerIDFile": "", "LogConfig": {"Type": "json-file", "Config": {}}, "NetworkMode": "bridge",
- "PortBindings": {
-     "8080/tcp": [
-         {
-             "HostIp": "",
-             "HostPort": "8080"
-         }
-     ]
- }, "RestartPolicy": {"Name": "no", "MaximumRetryCount": 0}, "AutoRemove": false, "VolumeDriver": "",
- "VolumesFrom": null, "ConsoleSize": [0, 0], "CapAdd": null, "CapDrop": null, "CgroupnsMode": "host", "Dns": null,
- "DnsOptions": null, "DnsSearch": null, "ExtraHosts": null, "GroupAdd": null, "IpcMode": "private", "Cgroup": "",
- "Links": null, "OomScoreAdj": 0, "PidMode": "", "Privileged": false, "PublishAllPorts": false, "ReadonlyRootfs": false,
- "SecurityOpt": null, "UTSMode": "", "UsernsMode": "", "ShmSize": 67108864, "Runtime": "runc", "Isolation": "",
- "CpuShares": 0, "Memory": 0, "NanoCpus": 0, "CgroupParent": "", "BlkioWeight": 0, "BlkioWeightDevice": null,
- "BlkioDeviceReadBps": null, "BlkioDeviceWriteBps": null, "BlkioDeviceReadIOps": null, "BlkioDeviceWriteIOps": null,
- "CpuPeriod": 0, "CpuQuota": 0, "CpuRealtimePeriod": 0, "CpuRealtimeRuntime": 0, "CpusetCpus": "", "CpusetMems": "",
- "Devices": null, "DeviceCgroupRules": null, "DeviceRequests": null, "MemoryReservation": 0, "MemorySwap": 0,
- "MemorySwappiness": null, "OomKillDisable": false, "PidsLimit": null, "Ulimits": null, "CpuCount": 0, "CpuPercent": 0,
- "IOMaximumIOps": 0, "IOMaximumBandwidth": 0,
- "MaskedPaths": ["/proc/asound", "/proc/acpi", "/proc/kcore", "/proc/keys", "/proc/latency_stats", "/proc/timer_list",
-                 "/proc/timer_stats", "/proc/sched_debug", "/proc/scsi", "/sys/firmware",
-                 "/sys/devices/virtual/powercap"],
- "ReadonlyPaths": ["/proc/bus", "/proc/fs", "/proc/irq", "/proc/sys", "/proc/sysrq-trigger"]}
+import sumolib
+from lxml import etree
+
+# Load the network
+net = sumolib.net.readNet('bangalore_reduced.net.xml.gz')
+
+# Parse the polygon file to extract coordinates
+polygon_file = 'route.poly.xml'
+tree = etree.parse(polygon_file)
+root = tree.getroot()
+
+coords = []
+for point in root.find('.//polygon').findall('point'):
+    coords.append((float(point.get('x')), float(point.get('y'))))
+
+# Map coordinates to edges
+route_edges = []
+for x, y in coords:
+    edge = net.getNearestEdge(net.convertLonLat2XY(x, y))
+    route_edges.append(edge.getID())
+
+# Remove duplicate consecutive edges
+clean_edges = [route_edges[0]]
+for e in route_edges[1:]:
+    if e != clean_edges[-1]:
+        clean_edges.append(e)
+
+# Generate route file (rou.xml)
+with open('route.rou.xml', 'w') as f:
+    f.write('''<routes>
+    <route id="route0" edges="{}"/>
+    <vehicle id="veh0" type="DEFAULT_VEHTYPE" route="route0" depart="0"/>
+</routes>'''.format(' '.join(clean_edges)))
